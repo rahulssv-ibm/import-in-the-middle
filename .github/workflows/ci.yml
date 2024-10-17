@@ -3,24 +3,24 @@ name: CI
 on:
   push:
   pull_request:
-  schedule:
-    - cron: '0 4 * * *'
+  workflow_dispatch:
 
 jobs:
   lint:
     # The linting packages require modern Node.js versions in order to run.
     # Therefore, we run linting separately and only once.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04-ppc64le
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
+          architecture: ppc64le
           node-version: 'lts/*'
       - run: npm install
       - run: npm run lint
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04-ppc64le
 
     strategy:
       matrix:
@@ -41,15 +41,14 @@ jobs:
           - 21.x
           - 22.x
         os:
-          - ubuntu-latest
-          - macos-latest
-          - windows-latest
+          - ubuntu-22.04-ppc64le
 
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
         with:
+          architecture: ppc64le
           node-version: ${{ matrix.node-version }}
       - run: npm install
       - run: npm test
@@ -71,7 +70,7 @@ jobs:
 
 
   coverage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04-ppc64le
     needs: build
     steps:
       # We need to check out the source in order for genhtml to work
@@ -105,13 +104,14 @@ jobs:
           lcov --summary all_lcov.info | grep lines | cut -d' ' -f 4 | cut -d% -f 1 | xargs node -e "x=process.argv[1];console.log(x);assert(+x >= 90)"
 
   integration:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04-ppc64le
     steps:
       - uses: actions/checkout@v4
       # We only test that exports match on a single node version because many of
       # the libraries we test do not support older node versions
       - uses: actions/setup-node@v4
         with:
+          architecture: ppc64le
           node-version: 'lts/*'
       - run: npm install
       - run: npm run test:e2e
